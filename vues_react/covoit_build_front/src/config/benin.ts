@@ -1,0 +1,33 @@
+export const BENIN_CITIES = [
+  "Porto-Novo",
+  "Cotonou",
+  "Abomey-Calavi",
+  "Ouidah",
+  "Allada",
+  "Bohicon",
+  "Abomey",
+  "Parakou",
+  "Natitingou",
+  "Djougou",
+  "Lokossa",
+  "Comè",
+  "Kandi",
+  "Malanville",
+  "Savalou",
+  "Savè",
+];
+
+export const BENIN_DEPARTMENTS = [
+  "Atlantique",
+  "Littoral",
+  "Ouémé",
+  "Plateau",
+  "Zou",
+  "Collines",
+  "Borgou",
+  "Alibori",
+  "Atacora",
+  "Donga",
+  "Mono",
+  "Couffo",
+];
