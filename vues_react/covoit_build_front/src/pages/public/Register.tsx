@@ -1,47 +1,213 @@
-import React from "react";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
-import InfoList from "../../ui/InfoList";
+import {type Role, useAuth } from "../../auth/AuthContext";
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+function normalizePhoneBJ(phone: string) {
+  // On garde + et chiffres
+  return phone.replace(/[^\d+]/g, "");
+}
+
+function isValidBeninPhone(phone: string) {
+  const p = normalizePhoneBJ(phone);
+  // Souple: +229XXXXXXXX ou +229XXXXXXXXX (formats peuvent varier)
+  return p.startsWith("+229") && p.length >= 12;
+}
 
 export default function Register() {
+  const { login } = useAuth();
+  const nav = useNavigate();
+
+  const [roleChoice, setRoleChoice] = useState<"PASSENGER" | "DRIVER" | "BOTH">("PASSENGER");
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("+229 ");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agree, setAgree] = useState(false);
+
+  const errors = useMemo(() => {
+    const e: string[] = [];
+    if (fullName.trim().length < 2) e.push("Le nom doit contenir au moins 2 caractères.");
+    if (!isValidEmail(email)) e.push("Email invalide.");
+    if (!isValidBeninPhone(phone)) e.push("Téléphone invalide (ex: +229 01 90 00 00 00).");
+    if (password.length < 6) e.push("Le mot de passe doit contenir au moins 6 caractères.");
+    if (password !== confirmPassword) e.push("Les mots de passe ne correspondent pas.");
+    if (!agree) e.push("Tu dois accepter les conditions d’utilisation.");
+    return e;
+  }, [fullName, email, phone, password, confirmPassword, agree]);
+
+  const canSubmit = errors.length === 0;
+
+  const roles: Role[] =
+    roleChoice === "DRIVER"
+      ? ["DRIVER"]
+      : roleChoice === "BOTH"
+      ? ["PASSENGER", "DRIVER"]
+      : ["PASSENGER"];
+
   return (
     <PageShell
       title="Inscription"
-      subtitle="Contexte Bénin : villes (Porto-Novo, Cotonou, Parakou…), prix en FCFA, timezone Africa/Porto-Novo."
-      actions={[{"label":"Rechercher un trajet","href":"/search","variant":"primary"}]}
-      nextApi={["GET /trips/search","GET /trips/{id}","GET /cities (Bénin)"]}
+      subtitle="Bénin • Téléphone +229 • Session mock avec rôles"
+      actions={[{ label: "J’ai déjà un compte", href: "/login", variant: "secondary" }]}
+      nextApi={["POST /auth/register", "POST /auth/send-otp", "GET /me"]}
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        <Section title="Objectif">
-          <InfoList
-            items={[
-              "Décrire clairement le rôle de cette page",
-              "Afficher une UI cohérente et responsive",
-              "Préparer l’intégration backend (API)",
-            ]}
-          />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Section title="Créer un compte">
+          <div className="grid gap-4">
+            <label className="grid gap-1 text-sm">
+              Je suis
+              <select
+                className="rounded-xl border px-3 py-2 bg-white"
+                value={roleChoice}
+                onChange={(e) => setRoleChoice(e.target.value as any)}
+              >
+                <option value="PASSENGER">Passager</option>
+                <option value="DRIVER">Conducteur</option>
+                <option value="BOTH">Passager + Conducteur</option>
+              </select>
+            </label>
+
+            <label className="grid gap-1 text-sm">
+              Nom complet
+              <input
+                className="rounded-xl border px-3 py-2"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Ex: Fouwad GBADAMASSI"
+                autoComplete="name"
+              />
+            </label>
+
+            <label className="grid gap-1 text-sm">
+              Email
+              <input
+                className="rounded-xl border px-3 py-2"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="exemple@mail.com"
+                autoComplete="email"
+              />
+            </label>
+
+            <label className="grid gap-1 text-sm">
+              Téléphone (Bénin)
+              <input
+                className="rounded-xl border px-3 py-2"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+229 01 90 00 00 00"
+                inputMode="tel"
+                autoComplete="tel"
+              />
+              <span className="text-xs text-gray-500">
+                Conseil : commence par <strong>+229</strong>.
+              </span>
+            </label>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-1 text-sm">
+                Mot de passe
+                <input
+                  className="rounded-xl border px-3 py-2"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type="password"
+                  autoComplete="new-password"
+                />
+              </label>
+
+              <label className="grid gap-1 text-sm">
+                Confirmer
+                <input
+                  className="rounded-xl border px-3 py-2"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  type="password"
+                  autoComplete="new-password"
+                />
+              </label>
+            </div>
+
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+              />
+              <span>
+                J’accepte les{" "}
+                <Link className="underline" to="/terms">
+                  Conditions d’utilisation
+                </Link>{" "}
+                et la{" "}
+                <Link className="underline" to="/privacy">
+                  Politique de confidentialité
+                </Link>
+                .
+              </span>
+            </label>
+
+            <button
+              disabled={!canSubmit}
+              className="rounded-xl bg-gray-900 px-4 py-2 text-white font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => {
+                // MOCK : en vrai => POST /auth/register + OTP
+                login({
+                  id: "u_" + Date.now(),
+                  fullName: fullName.trim(),
+                  email: email.trim(),
+                  phone: normalizePhoneBJ(phone),
+                  roles,
+                });
+
+                // Redirection selon rôles
+                if (roles.includes("DRIVER") && roles.includes("PASSENGER")) nav("/m");
+                else if (roles.includes("DRIVER")) nav("/d");
+                else nav("/p");
+              }}
+            >
+              Créer mon compte (mock)
+            </button>
+
+            {errors.length > 0 && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3">
+                <p className="text-sm font-semibold text-red-700">À corriger :</p>
+                <ul className="mt-2 list-disc pl-5 text-sm text-red-700 space-y-1">
+                  {errors.map((x) => (
+                    <li key={x}>{x}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </Section>
 
-        <Section title="À implémenter (UI)">
-          <InfoList
-            items={[
-              "Formulaire / liste / détails selon la page",
-              "États : loading, empty, error",
-              "Actions principales (CTA) + navigation",
-            ]}
-          />
+        <Section title="Déjà inscrit ?">
+          <p className="text-sm text-gray-600">
+            Connecte-toi pour accéder à ton tableau de bord.
+          </p>
+
+          <Link
+            to="/login"
+            className="mt-4 inline-flex w-full justify-center rounded-xl border px-4 py-2 font-medium hover:bg-gray-50"
+          >
+            Aller à la connexion
+          </Link>
+
+          <p className="mt-4 text-xs text-gray-500">
+            Prochaine étape : vérification téléphone (OTP) et email.
+          </p>
         </Section>
       </div>
-
-      <Section title="Notes Bénin">
-        <InfoList
-          items={[
-            "Devise : FCFA (XOF)",
-            "Fuseau horaire : Africa/Porto-Novo",
-            "Villes : Porto-Novo, Cotonou, Abomey-Calavi, Parakou, …",
-          ]}
-        />
-      </Section>
     </PageShell>
   );
 }

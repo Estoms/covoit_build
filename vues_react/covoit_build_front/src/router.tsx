@@ -1,4 +1,6 @@
-import React from "react";
+import ProtectedRoute from "./auth/ProtectedRoute";
+import Forbidden from "./pages/public/Forbidden";
+
 import { createBrowserRouter } from "react-router-dom";
 
 import PublicLayout from "./layouts/PublicLayout";
@@ -40,27 +42,48 @@ export const router = createBrowserRouter([
       { path: "/trips/:tripId", element: <TripDetailsPublic /> },
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
+      { path: "/403", element: <Forbidden /> },
     ],
   },
   {
   element: <AppLayout />,
   children: [
     // Passager
-    { path: "/p", element: <PassengerDashboard /> },
+    { path: "/p", element: (
+      <ProtectedRoute roles={["PASSENGER"]}>
+        <PassengerDashboard />
+      </ProtectedRoute>
+    )},
     { path: "/p/trips/:tripId", element: <TripDetails /> },
     { path: "/p/booking/:tripId", element: <Booking /> },
     { path: "/p/payment/:bookingId", element: <Payment /> },
     { path: "/p/booking/confirmation/:bookingId", element: <BookingConfirmation /> },
 
     // Conducteur
-    { path: "/d", element: <DriverDashboard /> },
+    { path: "/d", element: (
+      <ProtectedRoute roles={["DRIVER"]}>
+        <DriverDashboard />
+      </ProtectedRoute>
+    )},
     { path: "/d/trips", element: <MyTrips /> },
     { path: "/d/trips/publish", element: <PublishTrip /> },
 
-    // Mixte / Admin / Support (ce que tu avais déjà)
-    { path: "/m", element: <UnifiedDashboard /> },
-    { path: "/admin", element: <AdminDashboard /> },
-    { path: "/support", element: <SupportConsole /> },
+   { path: "/admin", element: (
+      <ProtectedRoute roles={["ADMIN"]}>
+        <AdminDashboard />
+      </ProtectedRoute>
+    )},
+    { path: "/support", element: (
+      <ProtectedRoute roles={["SUPPORT"]}>
+        <SupportConsole />
+      </ProtectedRoute>
+    )},
+    { path: "/m", element: (
+      <ProtectedRoute roles={["PASSENGER","DRIVER"]}>
+        <UnifiedDashboard />
+      </ProtectedRoute>
+    )},
+
   ],
 },
 
