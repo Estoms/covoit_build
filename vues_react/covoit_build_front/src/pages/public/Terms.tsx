@@ -1,46 +1,45 @@
-import React from "react";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
-import InfoList from "../../ui/InfoList";
 
 export default function Terms() {
   return (
     <PageShell
-      title="Conditions générales d’utilisation"
-      subtitle="Contexte Bénin : villes (Porto-Novo, Cotonou, Parakou…), prix en FCFA, timezone Africa/Porto-Novo."
-      actions={[{"label":"Rechercher un trajet","href":"/search","variant":"primary"}]}
-      nextApi={["GET /trips/search","GET /trips/{id}","GET /cities (Bénin)"]}
+      title="Conditions d’utilisation"
+      subtitle="Plateforme de covoiturage – CovoitBuild"
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        <Section title="Objectif">
-          <InfoList
-            items={[
-              "Décrire clairement le rôle de cette page",
-              "Afficher une UI cohérente et responsive",
-              "Préparer l’intégration backend (API)",
-            ]}
-          />
-        </Section>
+      <Section title="1. Objet">
+        <p className="text-sm text-gray-700">
+          CovoitBuild met en relation conducteurs et passagers pour le partage
+          de trajets au Bénin. La plateforme n’est pas une société de transport.
+        </p>
+      </Section>
 
-        <Section title="À implémenter (UI)">
-          <InfoList
-            items={[
-              "Formulaire / liste / détails selon la page",
-              "États : loading, empty, error",
-              "Actions principales (CTA) + navigation",
-            ]}
-          />
-        </Section>
-      </div>
+      <Section title="2. Responsabilité">
+        <p className="text-sm text-gray-700">
+          Les conducteurs et passagers sont responsables de leur comportement,
+          du respect du code de la route et des lois locales.
+        </p>
+      </Section>
 
-      <Section title="Notes Bénin">
-        <InfoList
-          items={[
-            "Devise : FCFA (XOF)",
-            "Fuseau horaire : Africa/Porto-Novo",
-            "Villes : Porto-Novo, Cotonou, Abomey-Calavi, Parakou, …",
-          ]}
-        />
+      <Section title="3. Comptes utilisateurs">
+        <p className="text-sm text-gray-700">
+          L’utilisateur s’engage à fournir des informations exactes et à ne pas
+          usurper l’identité d’autrui.
+        </p>
+      </Section>
+
+      <Section title="4. Paiements">
+        <p className="text-sm text-gray-700">
+          Les paiements effectués via la plateforme sont destinés au partage de
+          frais de transport et non à une activité professionnelle.
+        </p>
+      </Section>
+
+      <Section title="5. Suspension de compte">
+        <p className="text-sm text-gray-700">
+          CovoitBuild peut suspendre un compte en cas de fraude, abus ou
+          comportement dangereux.
+        </p>
       </Section>
     </PageShell>
   );

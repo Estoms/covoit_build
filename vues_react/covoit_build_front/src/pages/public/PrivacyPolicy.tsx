@@ -1,46 +1,46 @@
-import React from "react";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
-import InfoList from "../../ui/InfoList";
 
-export default function PrivacyPolicy() {
+export default function Privacy() {
   return (
     <PageShell
       title="Politique de confidentialité"
-      subtitle="Contexte Bénin : villes (Porto-Novo, Cotonou, Parakou…), prix en FCFA, timezone Africa/Porto-Novo."
-      actions={[{"label":"Rechercher un trajet","href":"/search","variant":"primary"}]}
-      nextApi={["GET /trips/search","GET /trips/{id}","GET /cities (Bénin)"]}
+      subtitle="Protection des données personnelles"
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        <Section title="Objectif">
-          <InfoList
-            items={[
-              "Décrire clairement le rôle de cette page",
-              "Afficher une UI cohérente et responsive",
-              "Préparer l’intégration backend (API)",
-            ]}
-          />
-        </Section>
+      <Section title="1. Données collectées">
+        <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>Nom, email, téléphone</li>
+          <li>Informations de trajets et réservations</li>
+          <li>Messages échangés sur la plateforme</li>
+        </ul>
+      </Section>
 
-        <Section title="À implémenter (UI)">
-          <InfoList
-            items={[
-              "Formulaire / liste / détails selon la page",
-              "États : loading, empty, error",
-              "Actions principales (CTA) + navigation",
-            ]}
-          />
-        </Section>
-      </div>
+      <Section title="2. Utilisation des données">
+        <p className="text-sm text-gray-700">
+          Les données servent à gérer les comptes, les réservations, la sécurité
+          et l’amélioration du service.
+        </p>
+      </Section>
 
-      <Section title="Notes Bénin">
-        <InfoList
-          items={[
-            "Devise : FCFA (XOF)",
-            "Fuseau horaire : Africa/Porto-Novo",
-            "Villes : Porto-Novo, Cotonou, Abomey-Calavi, Parakou, …",
-          ]}
-        />
+      <Section title="3. Partage des données">
+        <p className="text-sm text-gray-700">
+          Les données ne sont jamais vendues. Certaines informations sont
+          partagées uniquement entre conducteur et passager pour le trajet.
+        </p>
+      </Section>
+
+      <Section title="4. Sécurité">
+        <p className="text-sm text-gray-700">
+          Nous mettons en place des mesures techniques pour protéger les
+          informations personnelles.
+        </p>
+      </Section>
+
+      <Section title="5. Droits des utilisateurs">
+        <p className="text-sm text-gray-700">
+          L’utilisateur peut demander la modification ou la suppression de ses
+          données personnelles.
+        </p>
       </Section>
     </PageShell>
   );

@@ -27,6 +27,9 @@ import Payment from "./pages/passenger/Payment";
 import BookingConfirmation from "./pages/passenger/BookingConfirmation";
 import TripDetails from "./pages/passenger/TripDetails";
 
+import Terms from "./pages/public/Terms";
+import Privacy from "./pages/public/PrivacyPolicy";
+
 
 function NotFound() {
   return <h1>404 - Page introuvable</h1>;
@@ -43,6 +46,9 @@ export const router = createBrowserRouter([
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
       { path: "/403", element: <Forbidden /> },
+      { path: "/terms", element: <Terms /> },
+      { path: "/privacy", element: <Privacy /> },
+
     ],
   },
   {
