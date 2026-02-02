@@ -1,47 +1,40 @@
-import React from "react";
 import PageShell from "../../ui/PageShell";
-import Section from "../../ui/Section";
-import InfoList from "../../ui/InfoList";
+import { MiniList, StatCard } from "../../ui/DashboardCards";
 
 export default function SupportConsole() {
   return (
     <PageShell
       title="Console support"
-      subtitle="Support : tickets utilisateurs, médiation, outils internes."
-      actions={[{"label":"Tickets","href":"/support/tickets","variant":"primary"}]}
-      nextApi={["GET /support/tickets","POST /support/tickets/{id}/reply","POST /support/mediation"]}
+      subtitle="Tickets utilisateurs, médiation et outils internes."
+      actions={[
+        { label: "Tickets", href: "/support/tickets", variant: "primary" },
+        { label: "FAQ interne", href: "/support/internal-faq", variant: "secondary" },
+      ]}
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        <Section title="Objectif">
-          <InfoList
-            items={[
-              "Décrire clairement le rôle de cette page",
-              "Afficher une UI cohérente et responsive",
-              "Préparer l’intégration backend (API)",
-            ]}
-          />
-        </Section>
-
-        <Section title="À implémenter (UI)">
-          <InfoList
-            items={[
-              "Formulaire / liste / détails selon la page",
-              "États : loading, empty, error",
-              "Actions principales (CTA) + navigation",
-            ]}
-          />
-        </Section>
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard title="Tickets ouverts" value="18" hint="Mock" href="/support/tickets" />
+        <StatCard title="En attente réponse" value="6" hint="Mock" href="/support/tickets" />
+        <StatCard title="Cas médiation" value="2" hint="Mock" href="/support/mediation" />
       </div>
 
-      <Section title="Notes Bénin">
-        <InfoList
+      <div className="grid gap-4 md:grid-cols-2">
+        <MiniList
+          title="Derniers tickets"
           items={[
-            "Devise : FCFA (XOF)",
-            "Fuseau horaire : Africa/Porto-Novo",
-            "Villes : Porto-Novo, Cotonou, Abomey-Calavi, Parakou, …",
+            { label: "Paiement non confirmé", meta: "Utilisateur: u_123", href: "/support/tickets" },
+            { label: "Annulation trajet", meta: "Utilisateur: u_987", href: "/support/tickets" },
           ]}
+          empty="Aucun ticket."
         />
-      </Section>
+        <MiniList
+          title="Outils"
+          items={[
+            { label: "Médiation", meta: "gestion litiges", href: "/support/mediation" },
+            { label: "FAQ interne", meta: "procédures", href: "/support/internal-faq" },
+          ]}
+          empty=""
+        />
+      </div>
     </PageShell>
   );
 }

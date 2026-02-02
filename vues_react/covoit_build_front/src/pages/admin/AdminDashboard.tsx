@@ -1,47 +1,40 @@
-import React from "react";
 import PageShell from "../../ui/PageShell";
-import Section from "../../ui/Section";
-import InfoList from "../../ui/InfoList";
+import { MiniList, StatCard } from "../../ui/DashboardCards";
 
 export default function AdminDashboard() {
   return (
     <PageShell
-      title="Dashboard admin"
-      subtitle="Administration : supervision, modération, finance, sécurité et configuration."
-      actions={[{"label":"Statistiques globales","href":"/admin/stats","variant":"primary"}]}
-      nextApi={["GET /admin/stats","GET /admin/users","POST /admin/moderation","GET /admin/finance"]}
+      title="Dashboard administrateur"
+      subtitle="Supervision, modération, finance et configuration."
+      actions={[
+        { label: "Utilisateurs", href: "/admin/users", variant: "secondary" },
+        { label: "Statistiques", href: "/admin/stats", variant: "primary" },
+      ]}
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        <Section title="Objectif">
-          <InfoList
-            items={[
-              "Décrire clairement le rôle de cette page",
-              "Afficher une UI cohérente et responsive",
-              "Préparer l’intégration backend (API)",
-            ]}
-          />
-        </Section>
-
-        <Section title="À implémenter (UI)">
-          <InfoList
-            items={[
-              "Formulaire / liste / détails selon la page",
-              "États : loading, empty, error",
-              "Actions principales (CTA) + navigation",
-            ]}
-          />
-        </Section>
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard title="Utilisateurs actifs" value="12 450" hint="Mock" href="/admin/users" />
+        <StatCard title="Trajets aujourd’hui" value="1 280" hint="Mock" href="/admin/trips" />
+        <StatCard title="Signalements" value="7" hint="À traiter" href="/admin/reports" />
       </div>
 
-      <Section title="Notes Bénin">
-        <InfoList
+      <div className="grid gap-4 md:grid-cols-2">
+        <MiniList
+          title="Derniers signalements"
           items={[
-            "Devise : FCFA (XOF)",
-            "Fuseau horaire : Africa/Porto-Novo",
-            "Villes : Porto-Novo, Cotonou, Abomey-Calavi, Parakou, …",
+            { label: "Litige paiement", meta: "il y a 10 min", href: "/admin/reports" },
+            { label: "Comportement abusif", meta: "il y a 1 h", href: "/admin/reports" },
           ]}
+          empty="Aucun signalement."
         />
-      </Section>
+        <MiniList
+          title="Actions rapides"
+          items={[
+            { label: "Configurer règles métier", meta: "pricing, limites, etc.", href: "/admin/rules" },
+            { label: "Contenus statiques", meta: "FAQ, pages légales", href: "/admin/content" },
+          ]}
+          empty=""
+        />
+      </div>
     </PageShell>
   );
 }

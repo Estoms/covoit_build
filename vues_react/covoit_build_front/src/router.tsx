@@ -30,6 +30,8 @@ import TripDetails from "./pages/passenger/TripDetails";
 import Terms from "./pages/public/Terms";
 import Privacy from "./pages/public/PrivacyPolicy";
 
+import VerifyEmail from "./pages/public/VerifyEmail";
+
 
 function NotFound() {
   return <h1>404 - Page introuvable</h1>;
@@ -48,6 +50,7 @@ export const router = createBrowserRouter([
       { path: "/403", element: <Forbidden /> },
       { path: "/terms", element: <Terms /> },
       { path: "/privacy", element: <Privacy /> },
+      { path: "/verify-email", element: <VerifyEmail /> },
 
     ],
   },

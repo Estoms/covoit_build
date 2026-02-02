@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export type Role = "PASSENGER" | "DRIVER" | "ADMIN" | "SUPPORT";
 
@@ -8,6 +8,7 @@ export type AuthUser = {
   email?: string;
   phone?: string;
   roles: Role[];
+  emailVerified?: boolean;
 };
 
 type AuthState = {
@@ -15,10 +16,10 @@ type AuthState = {
   isAuthenticated: boolean;
   login: (user: AuthUser) => void;
   logout: () => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
 };
 
 const STORAGE_KEY = "covoitbuild_auth_user";
-
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // ✅ Déclare d'abord les fonctions (AVANT useMemo)
   const login = (u: AuthUser) => {
     setUser(u);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
@@ -44,12 +46,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const updateUser = (patch: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // ✅ Ensuite seulement on fait le memo
   const value = useMemo<AuthState>(
     () => ({
       user,
       isAuthenticated: !!user,
       login,
       logout,
+      updateUser,
     }),
     [user]
   );
@@ -62,3 +75,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
+    

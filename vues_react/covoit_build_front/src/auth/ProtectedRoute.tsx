@@ -16,6 +16,11 @@ export default function ProtectedRoute({
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  if (user?.emailVerified === false) {
+    return <Navigate to="/verify-email" replace />; 
+  }
+
+
   if (roles && roles.length > 0) {
     const ok = user?.roles?.some((r) => roles.includes(r));
     if (!ok) return <Navigate to="/403" replace />;

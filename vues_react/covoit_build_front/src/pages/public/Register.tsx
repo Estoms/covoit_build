@@ -167,7 +167,11 @@ export default function Register() {
                   email: email.trim(),
                   phone: normalizePhoneBJ(phone),
                   roles,
+                  emailVerified: false,
                 });
+
+                //redirection vers confirmation email
+                nav("/verify-email");
 
                 // Redirection selon rôles
                 if (roles.includes("DRIVER") && roles.includes("PASSENGER")) nav("/m");
