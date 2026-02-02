@@ -32,6 +32,8 @@ import Privacy from "./pages/public/PrivacyPolicy";
 
 import VerifyEmail from "./pages/public/VerifyEmail";
 
+import Verifications from "./pages/profile/Verifications";
+import FaceScan from "./pages/profile/FaceScan";
 
 function NotFound() {
   return <h1>404 - Page introuvable</h1>;
@@ -92,6 +94,23 @@ export const router = createBrowserRouter([
         <UnifiedDashboard />
       </ProtectedRoute>
     )},
+    {
+      path: "/profile/verifications",
+      element: (
+        <ProtectedRoute roles={["PASSENGER", "DRIVER", "ADMIN", "SUPPORT"]}>
+          <Verifications />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/verify/face",
+      element: (
+        <ProtectedRoute roles={["PASSENGER", "DRIVER", "ADMIN", "SUPPORT"]}>
+          <FaceScan />
+        </ProtectedRoute>
+      ),
+    },
+
 
   ],
 },

@@ -6,10 +6,8 @@ export default function UnifiedDashboard() {
     <PageShell
       title="Dashboard unifié"
       subtitle="Basculer entre passager et conducteur, historique global et statistiques."
-      actions={[
-        { label: "Mode passager", href: "/p", variant: "secondary" },
-        { label: "Mode conducteur", href: "/d", variant: "primary" },
-      ]}
+     actions={[{ label: "Vérifications", href: "/profile/verifications", variant: "primary" }]}
+
     >
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard title="Réservations à venir" value="2" hint="Passager" href="/p/bookings/upcoming" />
