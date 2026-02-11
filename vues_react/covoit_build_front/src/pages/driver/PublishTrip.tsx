@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
+import { addTrip } from "../../data/tripsStore";
+import { useAuth } from "../../auth/AuthContext";
 
 const BENIN_CITIES = [
   "Porto-Novo",
@@ -32,10 +34,11 @@ function formatXof(amount: number) {
 
 export default function PublishTrip() {
   const nav = useNavigate();
+  const { user } = useAuth();
 
   const [from, setFrom] = useState("Porto-Novo");
   const [to, setTo] = useState("Cotonou");
-  const [date, setDate] = useState(""); // JJ/MM/AAAA
+  const [date, setDate] = useState(""); // yyyy-mm-dd
   const [time, setTime] = useState(""); // HH:mm
   const [meetingPoint, setMeetingPoint] = useState("Gare routière");
   const [dropPoint, setDropPoint] = useState("Centre-ville");
@@ -120,21 +123,22 @@ export default function PublishTrip() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-1 text-sm">
-                Date (JJ/MM/AAAA)
+                Date
                 <input
                   className="rounded-xl border px-3 py-2"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  placeholder="23/01/2026"
+                  type="date"
                 />
               </label>
 
               <label className="grid gap-1 text-sm">
-                Heure (HH:mm)
+                Heure
                 <input
                   className="rounded-xl border px-3 py-2"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
+                  type="time"
                   placeholder="14:30"
                 />
               </label>
@@ -199,7 +203,22 @@ export default function PublishTrip() {
               disabled={!canPublish}
               className="rounded-xl bg-gray-900 px-4 py-2 text-white font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
-                // Mock : en vrai => POST /trips
+                // Mock : stockage local pour pouvoir retrouver les trajets publiés
+                const id = `u_${Date.now()}`;
+                const dateTime = date && time ? `${date}T${time}:00` : new Date().toISOString();
+                addTrip({
+                  id,
+                  from,
+                  to,
+                  dateTime,
+                  priceXof,
+                  driverName: user?.fullName || "Conducteur",
+                  driverRating: 4.8,
+                  seatsLeft: seats,
+                  meetingPoint,
+                  dropPoint,
+                  car,
+                });
                 nav("/d/trips");
               }}
             >

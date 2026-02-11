@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
-import { MOCK_TRIPS } from "../../data/mockTrips";
+import { findTripById } from "../../data/tripsStore";
 
 function formatXof(amount: number) {
   return new Intl.NumberFormat("fr-BJ", {
@@ -16,7 +16,7 @@ export default function TripDetails() {
   const { tripId } = useParams();
   const nav = useNavigate();
 
-  const trip = useMemo(() => MOCK_TRIPS.find((t) => t.id === tripId), [tripId]);
+  const trip = useMemo(() => (tripId ? findTripById(tripId) : undefined), [tripId]);
 
   if (!trip) {
     return (

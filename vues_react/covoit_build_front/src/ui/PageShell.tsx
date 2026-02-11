@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 type Action = { label: string; href?: string; onClick?: () => void; variant?: "primary" | "secondary" };
 
@@ -8,16 +9,36 @@ export default function PageShell({
   actions,
   children,
   nextApi,
+  backTo,
+  showBack = true,
 }: {
   title: string;
   subtitle?: string;
   actions?: Action[];
   children?: React.ReactNode;
   nextApi?: string[];
+  /** If provided, clicking "Retour" navigates to this path. Otherwise goes back one step. */
+  backTo?: string;
+  /** Show a back button in the header. Defaults to true. */
+  showBack?: boolean;
 }) {
+  const nav = useNavigate();
+
   return (
     <div className="space-y-6">
       <header className="rounded-2xl border bg-white p-4 md:p-6">
+        {showBack && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={() => (backTo ? nav(backTo) : nav(-1))}
+              className="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium hover:bg-gray-50"
+            >
+              <span aria-hidden>←</span> Retour
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{title}</h1>

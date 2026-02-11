@@ -78,7 +78,12 @@ export default function VerifyEmail() {
               setTimeout(() => {
                 updateUser({ emailVerified: true });
                 setChecking(false);
-                nav("/p"); // ou redirection selon rôle (on le fera après si tu veux)
+                const roles = user?.roles || [];
+                if (roles.includes("DRIVER") && roles.includes("PASSENGER")) nav("/m");
+                else if (roles.includes("DRIVER")) nav("/d");
+                else if (roles.includes("ADMIN")) nav("/admin");
+                else if (roles.includes("SUPPORT")) nav("/support");
+                else nav("/p");
               }, 600);
             }}
           >
@@ -87,7 +92,7 @@ export default function VerifyEmail() {
 
           <div className="mt-4 text-sm text-gray-600">
             Besoin d’aide ?{" "}
-            <Link className="underline" to="/help">
+            <Link className="underline" to="/terms">
               FAQ
             </Link>
           </div>

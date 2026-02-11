@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
-import { MOCK_TRIPS } from "../../data/mockTrips";
+import { getAllTrips } from "../../data/tripsStore";
 
 function formatXof(amount: number) {
   return new Intl.NumberFormat("fr-BJ", {
@@ -20,7 +20,7 @@ export default function SearchResults() {
   const [minSeats, setMinSeats] = useState(1);
 
   const results = useMemo(() => {
-    return MOCK_TRIPS.filter((t) => {
+    return getAllTrips().filter((t) => {
       const okFrom = qFrom ? t.from.toLowerCase().includes(qFrom.toLowerCase()) : true;
       const okTo = qTo ? t.to.toLowerCase().includes(qTo.toLowerCase()) : true;
       const okSeats = t.seatsLeft >= minSeats;

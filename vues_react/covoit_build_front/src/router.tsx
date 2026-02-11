@@ -26,6 +26,7 @@ import Booking from "./pages/passenger/Booking";
 import Payment from "./pages/passenger/Payment";
 import BookingConfirmation from "./pages/passenger/BookingConfirmation";
 import TripDetails from "./pages/passenger/TripDetails";
+import PassengerMessages from "./pages/passenger/Messages";
 
 import Terms from "./pages/public/Terms";
 import Privacy from "./pages/public/PrivacyPolicy";
@@ -107,6 +108,15 @@ export const router = createBrowserRouter([
       element: (
         <ProtectedRoute roles={["PASSENGER", "DRIVER", "ADMIN", "SUPPORT"]}>
           <FaceScan />
+        </ProtectedRoute>
+      ),
+    },
+
+    {
+      path: "/p/messages",
+      element: (
+        <ProtectedRoute roles={["PASSENGER"]}>
+          <PassengerMessages />
         </ProtectedRoute>
       ),
     },

@@ -4,6 +4,9 @@ import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
 import {type Role, useAuth } from "../../auth/AuthContext";
 
+// Mock "base de données" locale pour pouvoir se reconnecter avec le bon rôle
+const USERS_KEY = "covoitbuild_mock_users";
+
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
@@ -30,6 +33,8 @@ export default function Register() {
   const [phone, setPhone] = useState("+229 ");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agree, setAgree] = useState(false);
 
   const errors = useMemo(() => {
@@ -115,24 +120,42 @@ export default function Register() {
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-1 text-sm">
                 Mot de passe
-                <input
-                  className="rounded-xl border px-3 py-2"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  type="password"
-                  autoComplete="new-password"
-                />
+                <div className="relative">
+                  <input
+                    className="w-full rounded-xl border px-3 py-2 pr-24"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border px-2 py-1 text-xs font-medium hover:bg-gray-50"
+                  >
+                    {showPassword ? "Masquer" : "Afficher"}
+                  </button>
+                </div>
               </label>
 
               <label className="grid gap-1 text-sm">
                 Confirmer
-                <input
-                  className="rounded-xl border px-3 py-2"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  type="password"
-                  autoComplete="new-password"
-                />
+                <div className="relative">
+                  <input
+                    className="w-full rounded-xl border px-3 py-2 pr-24"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border px-2 py-1 text-xs font-medium hover:bg-gray-50"
+                  >
+                    {showConfirmPassword ? "Masquer" : "Afficher"}
+                  </button>
+                </div>
               </label>
             </div>
 
@@ -161,22 +184,35 @@ export default function Register() {
               className="rounded-xl bg-gray-900 px-4 py-2 text-white font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 // MOCK : en vrai => POST /auth/register + OTP
-                login({
+                const u = {
                   id: "u_" + Date.now(),
                   fullName: fullName.trim(),
                   email: email.trim(),
                   phone: normalizePhoneBJ(phone),
                   roles,
                   emailVerified: false,
-                });
+                };
 
-                //redirection vers confirmation email
+                // ✅ Persiste l'utilisateur dans une liste locale pour pouvoir se reconnecter ensuite
+                try {
+                  const raw = localStorage.getItem(USERS_KEY);
+                  const list = raw ? (JSON.parse(raw) as any[]) : [];
+                  const next = Array.isArray(list) ? list : [];
+                  const idx = next.findIndex(
+                    (x) => x?.email === u.email || x?.phone === u.phone
+                  );
+                  if (idx >= 0) next[idx] = { ...next[idx], ...u };
+                  else next.unshift(u);
+                  localStorage.setItem(USERS_KEY, JSON.stringify(next));
+                } catch {
+                  // ignore
+                }
+
+                // ✅ Ouvre une session avec le bon rôle
+                login(u);
+
+                // ✅ Une seule redirection : la page email décidera ensuite du dashboard
                 nav("/verify-email");
-
-                // Redirection selon rôles
-                if (roles.includes("DRIVER") && roles.includes("PASSENGER")) nav("/m");
-                else if (roles.includes("DRIVER")) nav("/d");
-                else nav("/p");
               }}
             >
               Créer mon compte (mock)

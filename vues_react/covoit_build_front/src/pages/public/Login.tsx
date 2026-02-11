@@ -4,6 +4,9 @@ import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
 import { useAuth } from "../../auth/AuthContext";
 
+// "Base" locale mock (créée lors de l'inscription)
+const USERS_KEY = "covoitbuild_mock_users";
+
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
@@ -20,6 +23,7 @@ export default function Login() {
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
 
   const errors = useMemo(() => {
@@ -66,13 +70,22 @@ export default function Login() {
 
             <label className="grid gap-1 text-sm">
               Mot de passe
-              <input
-                className="rounded-xl border px-3 py-2"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
+              <div className="relative">
+                <input
+                  className="w-full rounded-xl border px-3 py-2 pr-24"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg border px-2 py-1 text-xs font-medium hover:bg-gray-50"
+                >
+                  {showPassword ? "Masquer" : "Afficher"}
+                </button>
+              </div>
             </label>
 
             <label className="flex items-center gap-2 text-sm">
@@ -88,13 +101,42 @@ export default function Login() {
               disabled={!canSubmit}
               className="rounded-xl bg-gray-900 px-4 py-2 text-white font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
-                // MOCK utilisateur
+                // ✅ MOCK login
+                // Si l'utilisateur a déjà été créé via Register, on réutilise ses rôles.
+                try {
+                  const raw = localStorage.getItem(USERS_KEY);
+                  const list = raw ? (JSON.parse(raw) as any[]) : [];
+                  const users = Array.isArray(list) ? list : [];
+                  const found = users.find((u) => {
+                    const sameEmail = u?.email && identifier.includes("@") && u.email === identifier;
+                    const samePhone = u?.phone && identifier.includes("+229") && u.phone === identifier;
+                    return sameEmail || samePhone;
+                  });
+
+                  if (found && Array.isArray(found?.roles)) {
+                    login({
+                      id: found.id || "u_" + Date.now(),
+                      fullName: found.fullName || "Utilisateur",
+                      email: found.email,
+                      phone: found.phone,
+                      roles: found.roles,
+                      // en test, on considère l'email vérifié si l'utilisateur passe par /verify-email
+                      emailVerified: found.emailVerified ?? true,
+                    });
+                    nav(from, { replace: true });
+                    return;
+                  }
+                } catch {
+                  // ignore
+                }
+
+                // Sinon on crée un utilisateur passager par défaut
                 login({
                   id: "u_" + Date.now(),
                   fullName: "Utilisateur",
                   email: identifier.includes("@") ? identifier : undefined,
                   phone: identifier.includes("+229") ? identifier : undefined,
-                  roles: ["PASSENGER"], // rôle par défaut
+                  roles: ["PASSENGER"],
                 });
 
                 nav(from, { replace: true });

@@ -196,7 +196,7 @@ export default function Home() {
                       className="rounded-xl border px-3 py-2"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      placeholder="JJ/MM/AAAA"
+                      type="date"
                     />
                   </label>
 
