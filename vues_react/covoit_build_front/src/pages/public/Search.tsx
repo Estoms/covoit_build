@@ -73,9 +73,9 @@ export default function Search() {
             Date (optionnel)
             <input
               className="rounded-xl border px-3 py-2"
+              type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              placeholder="JJ/MM/AAAA"
             />
           </label>
         </div>
