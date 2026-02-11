@@ -1,46 +1,27 @@
-import React from "react";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
-import InfoList from "../../ui/InfoList";
 
-export default function Tickets() {
+export default function SupportTickets() {
+  const tickets = [
+    { id: "T-101", from: "Awa K.", subject: "Problème paiement", status: "Ouvert" },
+    { id: "T-102", from: "Kossi D.", subject: "Litige réservation", status: "En cours" },
+  ];
+
   return (
     <PageShell
       title="Tickets"
-      subtitle="Support : tickets utilisateurs, médiation, outils internes."
-      actions={[{"label":"Tickets","href":"/support/tickets","variant":"primary"}]}
-      nextApi={["GET /support/tickets","POST /support/tickets/{id}/reply","POST /support/mediation"]}
+      subtitle="Gestion des tickets (mock)."
+      actions={[{ label: "Console", href: "/support", variant: "secondary" }]}
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        <Section title="Objectif">
-          <InfoList
-            items={[
-              "Décrire clairement le rôle de cette page",
-              "Afficher une UI cohérente et responsive",
-              "Préparer l’intégration backend (API)",
-            ]}
-          />
-        </Section>
-
-        <Section title="À implémenter (UI)">
-          <InfoList
-            items={[
-              "Formulaire / liste / détails selon la page",
-              "États : loading, empty, error",
-              "Actions principales (CTA) + navigation",
-            ]}
-          />
-        </Section>
-      </div>
-
-      <Section title="Notes Bénin">
-        <InfoList
-          items={[
-            "Devise : FCFA (XOF)",
-            "Fuseau horaire : Africa/Porto-Novo",
-            "Villes : Porto-Novo, Cotonou, Abomey-Calavi, Parakou, …",
-          ]}
-        />
+      <Section title="Liste">
+        <div className="space-y-2">
+          {tickets.map((t) => (
+            <div key={t.id} className="rounded-2xl border bg-white p-4 shadow-sm">
+              <div className="font-semibold">{t.id} — {t.subject}</div>
+              <div className="text-sm text-gray-600">De : {t.from} • Statut : {t.status}</div>
+            </div>
+          ))}
+        </div>
       </Section>
     </PageShell>
   );

@@ -1,46 +1,27 @@
-import React from "react";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
-import InfoList from "../../ui/InfoList";
 
-export default function Reports() {
+export default function AdminReports() {
+  const reports = [
+    { id: "R-001", subject: "Retard conducteur", status: "Ouvert" },
+    { id: "R-002", subject: "Annulation tardive", status: "En cours" },
+  ];
+
   return (
     <PageShell
-      title="Rapports"
-      subtitle="Administration : supervision, modération, finance, sécurité et configuration."
-      actions={[{"label":"Statistiques globales","href":"/admin/stats","variant":"primary"}]}
-      nextApi={["GET /admin/stats","GET /admin/users","POST /admin/moderation","GET /admin/finance"]}
+      title="Signalements"
+      subtitle="Modération et traitement (mock)."
+      actions={[{ label: "Dashboard", href: "/admin", variant: "secondary" }]}
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        <Section title="Objectif">
-          <InfoList
-            items={[
-              "Décrire clairement le rôle de cette page",
-              "Afficher une UI cohérente et responsive",
-              "Préparer l’intégration backend (API)",
-            ]}
-          />
-        </Section>
-
-        <Section title="À implémenter (UI)">
-          <InfoList
-            items={[
-              "Formulaire / liste / détails selon la page",
-              "États : loading, empty, error",
-              "Actions principales (CTA) + navigation",
-            ]}
-          />
-        </Section>
-      </div>
-
-      <Section title="Notes Bénin">
-        <InfoList
-          items={[
-            "Devise : FCFA (XOF)",
-            "Fuseau horaire : Africa/Porto-Novo",
-            "Villes : Porto-Novo, Cotonou, Abomey-Calavi, Parakou, …",
-          ]}
-        />
+      <Section title="Liste">
+        <div className="space-y-2">
+          {reports.map((r) => (
+            <div key={r.id} className="rounded-2xl border bg-white p-4 shadow-sm">
+              <div className="font-semibold">{r.id} — {r.subject}</div>
+              <div className="text-sm text-gray-600">Statut : {r.status}</div>
+            </div>
+          ))}
+        </div>
       </Section>
     </PageShell>
   );

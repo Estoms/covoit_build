@@ -16,13 +16,17 @@ export default function ProtectedRoute({
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (user?.emailVerified === false) {
-    return <Navigate to="/verify-email" replace />; 
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
+  if (user.emailVerified === false) {
+    return <Navigate to="/verify-email" replace state={{ from: location.pathname }} />;
+  }
 
   if (roles && roles.length > 0) {
-    const ok = user?.roles?.some((r) => roles.includes(r));
+    const userRoles = user.roles ?? [];
+    const ok = userRoles.some((r) => roles.includes(r));
     if (!ok) return <Navigate to="/403" replace />;
   }
 

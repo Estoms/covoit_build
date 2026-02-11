@@ -1,4 +1,3 @@
-import React from "react";
 import PageShell from "../../ui/PageShell";
 import Section from "../../ui/Section";
 import InfoList from "../../ui/InfoList";
