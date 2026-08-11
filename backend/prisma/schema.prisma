@@ -1,0 +1,430 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  PASSENGER
+  DRIVER
+  ADMIN
+  SUPPORT
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TripStatus {
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  DEPOSIT           // passenger deposits trip amount + fee share into escrow
+  RELEASE_ADVANCE    // partial release to driver before departure
+  RELEASE_FINAL       // remaining release to driver after trip
+  PAYOUT_FULL          // full release to driver after trip (no advance chosen)
+  CASHOUT_FEE_WAIVER_BONUS // platform-covered part of the withdrawal fee
+  REFUND
+  WALLET_TOPUP
+  LOYALTY_REWARD
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum MomoProvider {
+  MTN
+  MOOV
+}
+
+enum PayoutMode {
+  ADVANCE_THEN_FINAL
+  FULL_AT_END
+}
+
+enum OtpPurpose {
+  REGISTER
+  LOGIN
+  RESET_PASSWORD
+}
+
+enum NotificationKind {
+  DOCUMENT_REMINDER
+  BOOKING_CONFIRMED
+  PAYMENT_RECEIVED
+  PAYOUT_RELEASED
+  MESSAGE_RECEIVED
+  VERIFICATION_UPDATE
+  LOYALTY_REWARD
+  GENERIC
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model User {
+  id                String    @id @default(cuid())
+  phone             String    @unique
+  phoneVerifiedAt   DateTime?
+  email             String?   @unique
+  emailVerifiedAt   DateTime?
+  fullName          String
+  passwordHash      String
+  npiEncrypted      String?   // NPI chiffre au repos (AES-256-GCM), jamais stocke en clair
+  idCardDocumentId  String?   // reference vers un document stocke via le module documents (pas l'image elle-meme)
+  address           String?
+  avatarUrl         String?
+
+  failedLoginCount  Int       @default(0)
+  lockedUntil       DateTime?
+
+  deletedAt         DateTime? // suppression logique (droit a l'effacement), donnees anonymisees a cette date
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  roles             UserRole[]
+  driverProfile     DriverProfile?
+  wallet            Wallet?
+  loyaltyAccount    LoyaltyAccount?
+  driverRewardProfile DriverRewardProfile?
+  notifications     Notification[]
+  otpCodes          OtpCode[]
+  refreshTokens     RefreshToken[]
+
+  tripsAsDriver     Trip[]        @relation("DriverTrips")
+  bookingsAsPassenger Booking[]   @relation("PassengerBookings")
+
+  reviewsGiven      Review[]      @relation("ReviewsGiven")
+  reviewsReceived   Review[]      @relation("ReviewsReceived")
+
+  conversationsAsPassenger Conversation[] @relation("ConvPassenger")
+  conversationsAsDriver    Conversation[] @relation("ConvDriver")
+  messagesSent      Message[]
+
+  ticketsCreated    SupportTicket[] @relation("TicketCreatedBy")
+  ticketsAssigned   SupportTicket[] @relation("TicketAssignedTo")
+}
+
+// Jetons de rafraichissement a rotation. On ne stocke jamais le jeton en clair,
+// seulement son empreinte (SHA-256). Chaque utilisation invalide le jeton et en
+// emet un nouveau (rotation) ; la reutilisation d'un jeton deja invalide
+// declenche la revocation de toute la famille de jetons (indice de vol).
+model RefreshToken {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash       String    @unique
+  familyId        String    // identifiant commun a tous les jetons issus d'une meme connexion
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  replacedByHash  String?
+  userAgent       String?
+  ipAddress       String?
+
+  @@index([userId])
+  @@index([familyId])
+}
+
+// Journal d'audit des actions sensibles (moderation, decisions admin, etc.)
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  action      String
+  targetType  String
+  targetId    String
+  metadata    String?  // JSON serialise
+  createdAt   DateTime @default(now())
+
+  @@index([targetType, targetId])
+}
+
+model UserRole {
+  id     String   @id @default(cuid())
+  userId String
+  role   RoleName
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+}
+
+model OtpCode {
+  id          String     @id @default(cuid())
+  phone       String
+  codeHash    String     // SHA-256(code + pepper), jamais le code en clair
+  purpose     OtpPurpose
+  attempts    Int        @default(0)
+  maxAttempts Int        @default(5)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  userId      String?
+  user        User?      @relation(fields: [userId], references: [id])
+
+  @@index([phone, purpose])
+}
+
+model DriverProfile {
+  id                       String              @id @default(cuid())
+  userId                   String              @unique
+  user                     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  vehicleType              String?
+  vehiclePlate             String?
+  licenseDocumentId        String?             // reference vers un document stocke (module documents)
+  nip                      String?             // piece d'identite conducteur
+
+  criminalRecordDocumentId String?             // reference vers un document stocke (module documents)
+  criminalRecordDueAt      DateTime            // createdAt + 1 mois
+  criminalRecordSubmittedAt DateTime?
+  criminalRecordLastReminderAt DateTime?
+
+  payoutModePreference     PayoutMode          @default(ADVANCE_THEN_FINAL)
+
+  verificationStatus       VerificationStatus  @default(PENDING)
+  verifiedAt               DateTime?
+  verifiedByAdminId        String?
+
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+}
+
+// Document sensible (piece d'identite, permis, casier judiciaire...). Le contenu
+// binaire n'est jamais stocke dans la base ni expose par une URL publique : il
+// est ecrit sur un stockage prive (disque local en dev, objet S3-compatible en
+// prod) et seul le proprietaire ou un admin peut le telecharger, via un
+// endpoint authentifie qui verifie les droits avant de servir le fichier.
+model Document {
+  id            String   @id @default(cuid())
+  ownerUserId   String
+  kind          String   // ID_CARD | DRIVER_LICENSE | CRIMINAL_RECORD
+  storageKey    String   // chemin/cle dans le stockage (jamais expose au client)
+  mimeType      String
+  sizeBytes     Int
+  createdAt     DateTime @default(now())
+
+  @@index([ownerUserId])
+}
+
+model Trip {
+  id             String    @id @default(cuid())
+  driverId       String
+  driver         User      @relation("DriverTrips", fields: [driverId], references: [id])
+
+  fromCity       String
+  fromPoint      String
+  toCity         String
+  toPoint        String
+  departAt       DateTime
+  pricePerSeatXof Int
+  seatsTotal     Int
+  seatsAvailable Int
+  vehicleLabel   String?
+  status         TripStatus @default(PUBLISHED)
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  bookings       Booking[]
+  conversations  Conversation[]
+}
+
+model Booking {
+  id                    String        @id @default(cuid())
+  tripId                String
+  trip                  Trip          @relation(fields: [tripId], references: [id])
+  passengerId           String
+  passenger             User          @relation("PassengerBookings", fields: [passengerId], references: [id])
+
+  seats                 Int
+  pricePerSeatXof       Int
+  tripAmountXof         Int
+  cashoutFeeEstimateXof Int
+  passengerFeeShareXof  Int
+  totalChargedXof       Int
+
+  status                BookingStatus @default(PENDING_PAYMENT)
+
+  advanceReleasedAt     DateTime?
+  finalReleasedAt       DateTime?
+  cancelledAt           DateTime?
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  transactions          Transaction[]
+  momoIntents           MomoPaymentIntent[]
+  review                Review?
+  conversation          Conversation?
+}
+
+model Wallet {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balanceXof  Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  walletId      String
+  wallet        Wallet            @relation(fields: [walletId], references: [id])
+  bookingId     String?
+  booking       Booking?          @relation(fields: [bookingId], references: [id])
+  type          TransactionType
+  amountXof     Int
+  momoProvider  MomoProvider?
+  momoReference String?
+  status        TransactionStatus @default(SUCCESS)
+  createdAt     DateTime          @default(now())
+}
+
+model MomoPaymentIntent {
+  id           String     @id @default(cuid())
+  bookingId    String
+  booking      Booking    @relation(fields: [bookingId], references: [id])
+  provider     MomoProvider
+  phone        String
+  amountXof    Int
+  reference    String     @unique
+  status       TransactionStatus @default(PENDING)
+  createdAt    DateTime   @default(now())
+  confirmedAt  DateTime?
+}
+
+model Conversation {
+  id          String   @id @default(cuid())
+  tripId      String?
+  trip        Trip?    @relation(fields: [tripId], references: [id])
+  bookingId   String?  @unique
+  booking     Booking? @relation(fields: [bookingId], references: [id])
+  passengerId String
+  passenger   User     @relation("ConvPassenger", fields: [passengerId], references: [id])
+  driverId    String
+  driver      User     @relation("ConvDriver", fields: [driverId], references: [id])
+  createdAt   DateTime @default(now())
+
+  messages    Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  body           String
+  createdAt      DateTime     @default(now())
+  readAt         DateTime?
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  fromUserId  String
+  fromUser    User     @relation("ReviewsGiven", fields: [fromUserId], references: [id])
+  toUserId    String
+  toUser      User     @relation("ReviewsReceived", fields: [toUserId], references: [id])
+  rating      Int
+  comment     String?
+  createdAt   DateTime @default(now())
+}
+
+model LoyaltyAccount {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points          Int      @default(0)
+  completedTrips  Int      @default(0)
+  updatedAt       DateTime @updatedAt
+
+  redemptions     LoyaltyRedemption[]
+}
+
+model LoyaltyRedemption {
+  id          String   @id @default(cuid())
+  accountId   String
+  account     LoyaltyAccount @relation(fields: [accountId], references: [id])
+  label       String
+  pointsSpent Int
+  createdAt   DateTime @default(now())
+}
+
+model DriverRewardProfile {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  monthKey               String   // "2026-07"
+  tripsThisMonth         Int      @default(0)
+  commissionRatePercent  Float    @default(12)
+  algoPriorityScore      Float    @default(0)
+  cashoutFeeWaiverActive Boolean  @default(false)
+  dataPassEligible       Boolean  @default(false)
+  dataPassClaimedAt      DateTime?
+
+  updatedAt              DateTime @updatedAt
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      NotificationKind
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+}
+
+model SupportTicket {
+  id             String        @id @default(cuid())
+  subject        String
+  status         TicketStatus  @default(OPEN)
+  createdByUserId String
+  createdBy      User          @relation("TicketCreatedBy", fields: [createdByUserId], references: [id])
+  assignedToUserId String?
+  assignedTo     User?         @relation("TicketAssignedTo", fields: [assignedToUserId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  messages       TicketMessage[]
+}
+
+model TicketMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id])
+  authorId  String
+  body      String
+  createdAt DateTime      @default(now())
+}
